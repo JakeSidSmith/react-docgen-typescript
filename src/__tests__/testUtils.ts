@@ -18,7 +18,7 @@ export interface ExpectedProp {
 }
 
 export function check(component: string, expected: ExpectedComponents, 
-    exactProperties: boolean = true, description: string = null) {
+    exactProperties: boolean = true, description: string = null, skipPropsWithoutDoc: boolean = false) {
 
     const fileName = path.join(__dirname, '../../src/__tests__/data', `${component}.tsx`); // it's running in ./temp
     const result = parse(fileName);
