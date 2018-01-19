@@ -18,7 +18,7 @@ export interface IButtonProps extends HTMLProps<HTMLButtonElement> {
 }
 
 /**
- * Column description
+ * Button description
  */
 export class Button extends React.Component<IButtonProps, {}> {
     public static defaultProps: Partial<IButtonProps> = {
