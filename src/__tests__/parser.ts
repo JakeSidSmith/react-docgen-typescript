@@ -292,6 +292,6 @@ describe('parser', () => {
                 prop3: { type: '() => void' },
                 prop4: { type: '"option1" | "option2" | "option3"' },
             }
-        }, true, null, {ignoreChildrenIfNoDocAvailable: true});
+        }, true, null, {skipPropsWithoutDoc: true});
     });
 });

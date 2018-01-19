@@ -31,11 +31,11 @@ export interface FileParser {
 }
 
 export interface ParserOptions {
-    ignoreChildrenIfNoDocAvailable: boolean;
+    skipPropsWithoutDoc: boolean;
 }
 
 export const defaultParserOpts: ParserOptions = {
-    ignoreChildrenIfNoDocAvailable: false
+    skipPropsWithoutDoc: false
 };
 
 const defaultOptions: ts.CompilerOptions = {
@@ -223,7 +223,7 @@ class Parser {
             const jsDocComment = this.findDocComment(prop);
 
             // Do not collect prop if it does not have a doc comment
-            if (this.parserOpts.ignoreChildrenIfNoDocAvailable && jsDocComment === defaultJSDoc) {
+            if (this.parserOpts.skipPropsWithoutDoc && jsDocComment === defaultJSDoc) {
               return;
             }
 
