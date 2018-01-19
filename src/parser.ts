@@ -31,7 +31,9 @@ export interface FileParser {
 }
 
 export interface ParserOptions {
-    skipPropsWithoutDoc: boolean;
+    skipPropsWithName?: string[] | string;
+    skipPropsWithoutDoc?: boolean;
+    propsFilter?: (jsDocComment: JSDoc) => boolean;
 }
 
 export const defaultParserOpts: ParserOptions = {
@@ -223,7 +225,29 @@ class Parser {
             const jsDocComment = this.findDocComment(prop);
 
             // Do not collect prop if it does not have a doc comment
-            if (this.parserOpts.skipPropsWithoutDoc && jsDocComment === defaultJSDoc) {
+            if (
+              this.parserOpts.skipPropsWithoutDoc &&
+              jsDocComment === defaultJSDoc
+            ) {
+              return;
+            }
+
+            if (
+              (
+                Array.isArray(this.parserOpts.skipPropsWithName) &&
+                this.parserOpts.skipPropsWithName.indexOf(propName) >= 0
+              ) || (
+                typeof this.parserOpts.skipPropsWithName === 'string' &&
+                propName === this.parserOpts.skipPropsWithName
+              )
+            ) {
+              return;
+            }
+
+            if (
+              typeof this.parserOpts.propsFilter === 'function' &&
+              !this.parserOpts.propsFilter(jsDocComment)
+            ) {
               return;
             }
 
