@@ -30,6 +30,14 @@ export interface FileParser {
     parse(filePath: string): ComponentDoc[];
 }
 
+export interface ParserOptions {
+    ignoreChildrenIfNoDocAvailable: boolean;
+}
+
+export const defaultParserOpts: ParserOptions = {
+    ignoreChildrenIfNoDocAvailable: false
+};
+
 const defaultOptions: ts.CompilerOptions = {
     target: ts.ScriptTarget.Latest,
     module: ts.ModuleKind.CommonJS,
@@ -40,21 +48,21 @@ const defaultOptions: ts.CompilerOptions = {
  * Parses a file with default TS options
  * @param filePath component file that should be parsed
  */
-export function parse(filePath: string) {
-    return withCompilerOptions(defaultOptions).parse(filePath);
+export function parse(filePath: string, parserOpts: ParserOptions = defaultParserOpts) {
+    return withCompilerOptions(defaultOptions, parserOpts).parse(filePath);
 }
 
 /**
  * Constructs a parser for a default configuration.
  */
-export function withDefaultConfig(): FileParser {
-    return withCompilerOptions(defaultOptions);
+export function withDefaultConfig(parserOpts: ParserOptions = defaultParserOpts): FileParser {
+    return withCompilerOptions(defaultOptions, parserOpts);
 }
 
 /**
  * Constructs a parser for a specified tsconfig file.
  */
-export function withCustomConfig(tsconfigPath: string): FileParser {
+export function withCustomConfig(tsconfigPath: string, parserOpts: ParserOptions): FileParser {
     const configJson = JSON.parse(fs.readFileSync(tsconfigPath, 'utf8'));
     const basePath = path.dirname(tsconfigPath);
 
@@ -66,18 +74,18 @@ export function withCustomConfig(tsconfigPath: string): FileParser {
         throw errors[0];
     }
 
-    return withCompilerOptions(options);
+    return withCompilerOptions(options, parserOpts);
 }
 
 /**
  * Constructs a parser for a specified set of TS compiler options.
  */
-export function withCompilerOptions(compilerOptions: ts.CompilerOptions): FileParser {
+export function withCompilerOptions(compilerOptions: ts.CompilerOptions, parserOpts: ParserOptions): FileParser {
     return {
         parse(filePath: string): ComponentDoc[] {
             const program = ts.createProgram([filePath], compilerOptions);
 
-            const parser = new Parser(program);
+            const parser = new Parser(program, parserOpts);
 
             const checker = program.getTypeChecker();
             const sourceFile = program.getSourceFile(filePath);
@@ -90,7 +98,7 @@ export function withCompilerOptions(compilerOptions: ts.CompilerOptions): FilePa
                 .filter(comp => comp);
 
             // this should filter out components with the same name as default export
-            const filteredComponents = components    
+            const filteredComponents = components
                 .filter((comp, index) => {
                     const isUnique = components
                         .slice(index + 1)
@@ -118,8 +126,10 @@ const defaultJSDoc: JSDoc = {
 
 class Parser {
     private checker: ts.TypeChecker;
+    private parserOpts: ParserOptions;
 
-    constructor(program: ts.Program) {
+    constructor(program: ts.Program, parserOpts: ParserOptions) {
+        this.parserOpts = parserOpts;
         this.checker = program.getTypeChecker();
     }
 
@@ -211,6 +221,11 @@ class Parser {
 
 
             const jsDocComment = this.findDocComment(prop);
+
+            // Do not collect prop if it does not have a doc comment
+            if (this.parserOpts.ignoreChildrenIfNoDocAvailable && jsDocComment === defaultJSDoc) {
+              return;
+            }
 
             let defaultValue = null;
 

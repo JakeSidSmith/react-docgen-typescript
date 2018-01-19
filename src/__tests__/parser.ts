@@ -29,7 +29,7 @@ describe('parser', () => {
             }
         });
     });
-    
+
     it('should parse simple react class component as default export only', function() {
         check('ColumnWithDefaultExportOnly', {
             ColumnWithDefaultExportOnly: {
@@ -293,6 +293,6 @@ describe('parser', () => {
                 prop3: { type: '() => void' },
                 prop4: { type: '"option1" | "option2" | "option3"' },
             }
-        }, true, null, true);
+        }, true, null, {ignoreChildrenIfNoDocAvailable: true});
     });
 });
